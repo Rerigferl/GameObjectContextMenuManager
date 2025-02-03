@@ -1,7 +1,7 @@
 {
     "name": "numeira.gameobject-contextmenu-manager",
-    "version": "0.0.0",
-    "displayName": "",
+    "version": "1.0.0",
+    "displayName": "GameObject ContextMenu Manager",
     "description": "",
     "url": "https://github.com/Rerigferl/GameObjectContextMenuManager",
     "vpmDependencies": {}
