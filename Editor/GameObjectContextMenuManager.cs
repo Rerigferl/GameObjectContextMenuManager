@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -17,7 +15,8 @@ internal static class GameObjectContextMenuManager
 {
     static GameObjectContextMenuManager()
     {
-        EditorApplication.delayCall += OnDelayCall;
+        SceneHierarchyHooks.addItemsToGameObjectContextMenu -= OnGameObjectContextMenu;
+        SceneHierarchyHooks.addItemsToGameObjectContextMenu += OnGameObjectContextMenu;
     }
 
     internal static HashSet<string>? MenuItemRoots;
@@ -27,43 +26,22 @@ internal static class GameObjectContextMenuManager
     private const string GameObjectMenuRoot = "GameObject/";
     private const string MenuPathRoot = "Manage Items";
 
-    private static void OnDelayCall()
+    private static void CorrectMenuItemRoots()
     {
         // AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).SelectMany(x => x.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)).Where(x => x.GetCustomAttribute<MenuItem>() != null);
-        var items = new List<MenuItem>();
-        items.Clear();
-        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        MenuItemRoots = OriginalMenuItemItems.Select(i => i?.Content?.text)
+        .Where(i => i is not null)
+        .Cast<string>()
+        .Select(path =>
         {
-            foreach (var type in assembly.GetTypes())
-            {
-                foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
-                {
-                    var attributes = Attribute.GetCustomAttributes(method, typeof(MenuItem), false);
-                    foreach (var attribute in attributes.Cast<MenuItem>())
-                    {
-                        if (attribute.menuItem.StartsWith(GameObjectMenuRoot))
-                            items.Add(attribute);
-                    }
-                }
-            }
-        }
-        items.Sort((x, y) => x.priority.CompareTo(y.priority));
-        MenuItemRoots = items.Select(x =>
-        {
-            var name = x.menuItem.AsSpan(GameObjectMenuRoot.Length);
+            var name = path.AsSpan();
             if (name.IndexOf('/') is int index and not -1)
             {
                 name = name[..index];
             }
-            if (name.IndexOfAny("%$&_") is int index2 and not -1 && name[index2 - 1] == ' ')
-            {
-                name = name[..(index2 - 1)];
-            }
             return name.ToString();
-        }).ToHashSet();
+        }).Where(n => string.IsNullOrWhiteSpace(n) is false).ToHashSet();
 
-        SceneHierarchyHooks.addItemsToGameObjectContextMenu -= OnGameObjectContextMenu;
-        SceneHierarchyHooks.addItemsToGameObjectContextMenu += OnGameObjectContextMenu;
     }
 
     private static void OnGameObjectContextMenu(GenericMenu menu, GameObject @object)
@@ -91,6 +69,7 @@ internal static class GameObjectContextMenuManager
         }
 
         OriginalMenuItemItems ??= Unsafe.As<List<MenuItemItem>>(new List<object>(list));
+        if (MenuItemRoots is null) { CorrectMenuItemRoots(); }
         var editableOrigins = Unsafe.As<List<MenuItemItem>>(new List<object>(OriginalMenuItemItems.Select(CloneMII)));
         list.Clear();
 
@@ -158,32 +137,49 @@ internal static class GameObjectContextMenuManager
     {
         private Vector2 scrollPosition;
         private SerializedObject? sObj;
+        HashSet<string> ConfiguredMenuPath;
 
+        void SetConfiguredMenuPathHashSet(SerializedProperty configurations, HashSet<string> strings)
+        {
+            strings.Clear();
+            var arraySize = configurations.arraySize;
+            for (var i = 0; arraySize > i; i += 1)
+            {
+                var element = configurations.GetArrayElementAtIndex(i);
+                strings.Add(element.FindPropertyRelative(nameof(MenuManageConfiguration.IncludeStatPath)).stringValue);
+            }
+        }
         public void OnGUI()
         {
             using var ss = new EditorGUILayout.ScrollViewScope(scrollPosition);
             var mmConfiguration = GameObjectContextMenuManagerConfiguration.instance;
             sObj ??= new SerializedObject(mmConfiguration);
 
+            using var ccs = new EditorGUI.ChangeCheckScope();
             var configurations = sObj.FindProperty(nameof(GameObjectContextMenuManagerConfiguration.MenuManageConfigurations));
             EditorGUILayout.PropertyField(configurations);
 
-
-            if (GUILayout.Button("Add Separator"))
+            if (ConfiguredMenuPath is null || ccs.changed)
             {
-                configurations.InsertArrayElementAtIndex(0);
-                var element = configurations.GetArrayElementAtIndex(0);
-                element.FindPropertyRelative(nameof(MenuManageConfiguration.Path)).stringValue = "";
-                element.FindPropertyRelative(nameof(MenuManageConfiguration.IncludeStatPath)).stringValue = "";
-                element.FindPropertyRelative(nameof(MenuManageConfiguration.ThisIsSeparator)).boolValue = true;
+                ConfiguredMenuPath ??= new();
+                SetConfiguredMenuPathHashSet(configurations, ConfiguredMenuPath);
             }
 
+            // if (GUILayout.Button("Add Separator"))
+            // {
+            //     configurations.InsertArrayElementAtIndex(0);
+            //     var element = configurations.GetArrayElementAtIndex(0);
+            //     element.FindPropertyRelative(nameof(MenuManageConfiguration.Path)).stringValue = "";
+            //     element.FindPropertyRelative(nameof(MenuManageConfiguration.IncludeStatPath)).stringValue = "";
+            //     element.FindPropertyRelative(nameof(MenuManageConfiguration.ThisIsSeparator)).boolValue = true;
+            // }
 
             var menuItemRoots = GameObjectContextMenuManager.MenuItemRoots;
             if (menuItemRoots is not null)
             {
                 foreach (var miPath in menuItemRoots)
                 {
+                    if (ConfiguredMenuPath.Contains(miPath)) { continue; }
                     using var s = new GUILayout.HorizontalScope();
                     if (GUILayout.Button("Add", GUILayout.MaxWidth(64f)))
                     {
@@ -196,13 +192,17 @@ internal static class GameObjectContextMenuManager
                     GUILayout.TextField(miPath);
                 }
             }
+            else
+            {
+                EditorGUILayout.LabelField("適当な GameObject を右クリックし一度メニューを開いてください！");
+            }
             sObj.ApplyModifiedProperties();
 
             using (new GUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Save to .json"))
                 {
-                    var writePath = EditorUtility.SaveFilePanel("save GameObjectContextMenuManagerConfiguration", "Assets", "GameObjectContextMenuManagerConfiguration.json", "json");
+                    var writePath = EditorUtility.SaveFilePanel("save GameObjectContextMenuManagerConfiguration", "", "GameObjectContextMenuManagerConfiguration.json", "json");
                     if (string.IsNullOrWhiteSpace(writePath) is false)
                     {
                         File.WriteAllText(writePath, JsonUtility.ToJson(mmConfiguration, true));
@@ -210,7 +210,7 @@ internal static class GameObjectContextMenuManager
                 }
                 if (GUILayout.Button("Load from .json"))
                 {
-                    var writePath = EditorUtility.OpenFilePanel("load GameObjectContextMenuManagerConfiguration", "Assets", "json");
+                    var writePath = EditorUtility.OpenFilePanel("load GameObjectContextMenuManagerConfiguration", "", "json");
                     if (string.IsNullOrWhiteSpace(writePath) is false)
                     {
                         JsonUtility.FromJsonOverwrite(File.ReadAllText(writePath), mmConfiguration);
