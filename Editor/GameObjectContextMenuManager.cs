@@ -157,12 +157,13 @@ internal static class GameObjectContextMenuManager
     internal sealed class GUI : EditorWindow
     {
         private Vector2 scrollPosition;
+        private SerializedObject? sObj;
 
         public void OnGUI()
         {
             using var ss = new EditorGUILayout.ScrollViewScope(scrollPosition);
             var mmConfiguration = GameObjectContextMenuManagerConfiguration.instance;
-            var sObj = new SerializedObject(mmConfiguration);
+            sObj ??= new SerializedObject(mmConfiguration);
 
             var configurations = sObj.FindProperty(nameof(GameObjectContextMenuManagerConfiguration.MenuManageConfigurations));
             EditorGUILayout.PropertyField(configurations);
