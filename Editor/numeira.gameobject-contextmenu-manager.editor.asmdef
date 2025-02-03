@@ -1,7 +1,9 @@
 {
-    "name": "vpm-package.runtime",
-    "references": [],
-    "includePlatforms": [],
+    "name": "numeira.gameobject-contextmenu-manager.editor",
+    "references": [ ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
