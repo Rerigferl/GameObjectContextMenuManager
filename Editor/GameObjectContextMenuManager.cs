@@ -154,6 +154,7 @@ internal static class GameObjectContextMenuManager
             using var ss = new EditorGUILayout.ScrollViewScope(scrollPosition);
             var mmConfiguration = GameObjectContextMenuManagerConfiguration.instance;
             sObj ??= new SerializedObject(mmConfiguration);
+            sObj.Update();
 
             using var ccs = new EditorGUI.ChangeCheckScope();
             var configurations = sObj.FindProperty(nameof(GameObjectContextMenuManagerConfiguration.MenuManageConfigurations));
@@ -213,6 +214,7 @@ internal static class GameObjectContextMenuManager
                     var writePath = EditorUtility.OpenFilePanel("load GameObjectContextMenuManagerConfiguration", "", "json");
                     if (string.IsNullOrWhiteSpace(writePath) is false)
                     {
+                        Undo.RecordObject(mmConfiguration, "Load from .json");
                         JsonUtility.FromJsonOverwrite(File.ReadAllText(writePath), mmConfiguration);
                     }
                 }
