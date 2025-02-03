@@ -122,6 +122,9 @@ internal static class GameObjectContextMenuManager
 
         AddMenu($"{MenuPathRoot}/Check All", CheckAll, GameObjectContextMenuManagerConfiguration.instance.DisabledItems.Count != 0);
         AddMenu($"{MenuPathRoot}/Uncheck All", UncheckAll, GameObjectContextMenuManagerConfiguration.instance.DisabledItems.Count != MenuItemRoots.Count);
+        menu.AddSeparator(MenuPathRoot + "/");
+
+        AddMenu($"{MenuPathRoot}/Edit on GUI..", () => EditorWindow.GetWindow<GUI>(), true);
 
         menu.AddSeparator(MenuPathRoot + "/");
         StringBuilder sb = new();
@@ -157,5 +160,36 @@ internal static class GameObjectContextMenuManager
         public GenericMenu.MenuFunction? Func;
         public GenericMenu.MenuFunction2? Func2;
         public object? UserData;
+    }
+
+    [EditorWindowTitle(title = "ContextMenu Manager")]
+    internal sealed class GUI : EditorWindow
+    {
+        private Vector2 scrollPosition;
+
+        public void OnGUI()
+        {
+            if (MenuItemRoots is null)
+                return;
+
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            var config = GameObjectContextMenuManagerConfiguration.instance;
+            foreach(var x in MenuItemRoots)
+            {
+                EditorGUI.BeginChangeCheck();
+                var flag = EditorGUILayout.ToggleLeft(x, !config.DisabledItems.Contains(x));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    if (flag)
+                        config.DisabledItems.Remove(x);
+                    else
+                        config.DisabledItems.Add(x);
+
+                    config.Save();
+                }
+            }
+
+            EditorGUILayout.EndScrollView();
+        }
     }
 }
