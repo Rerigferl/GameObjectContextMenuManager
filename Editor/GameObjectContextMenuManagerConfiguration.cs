@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -8,22 +10,17 @@ namespace Numeira
     [FilePath("ProjectSettings/GameObjectContextMenuManager.asset", FilePathAttribute.Location.ProjectFolder)]
     internal sealed class GameObjectContextMenuManagerConfiguration : ScriptableSingleton<GameObjectContextMenuManagerConfiguration>
     {
-        [SerializeField]
-        private string[]? disabledItems;
+        public MenuManageConfiguration[] MenuManageConfigurations = new MenuManageConfiguration[] { MenuManageConfiguration.From("Others", "") };
+    }
 
-        private HashSet<string>? disabledItemsBackfield;
-        public HashSet<string> DisabledItems
-        {
-            get
-            {
-                return disabledItemsBackfield ??= (disabledItems ??= new string[0]).ToHashSet();
-            }
-        }
+    [Serializable]
+    internal struct MenuManageConfiguration
+    {
+        public string Path;
+        public string IncludeStatPath;
+        public bool ThisIsSeparator;
 
-        public void Save()
-        {
-            disabledItems = disabledItemsBackfield.ToArray();
-            Save(true);
-        }
+        public static MenuManageConfiguration From(string path = "", string includeMenuItemRoot = "") => new MenuManageConfiguration() { Path = path, IncludeStatPath = includeMenuItemRoot };
+        public static MenuManageConfiguration Separator(string path = "") => new MenuManageConfiguration() { Path = path, ThisIsSeparator = true };
     }
 }

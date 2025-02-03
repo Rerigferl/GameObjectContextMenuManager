@@ -1,5 +1,7 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -18,7 +20,9 @@ internal static class GameObjectContextMenuManager
         EditorApplication.delayCall += OnDelayCall;
     }
 
-    private static HashSet<string>? MenuItemRoots;
+    internal static HashSet<string>? MenuItemRoots;
+
+    static List<MenuItemItem>? OriginalMenuItemItems;
 
     private const string GameObjectMenuRoot = "GameObject/";
     private const string MenuPathRoot = "Manage Items";
@@ -28,14 +32,14 @@ internal static class GameObjectContextMenuManager
         // AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).SelectMany(x => x.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)).Where(x => x.GetCustomAttribute<MenuItem>() != null);
         var items = new List<MenuItem>();
         items.Clear();
-        foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
-            foreach(var type in assembly.GetTypes())
+            foreach (var type in assembly.GetTypes())
             {
-                foreach(var method in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
+                foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
                 {
                     var attributes = Attribute.GetCustomAttributes(method, typeof(MenuItem), false);
-                    foreach(var attribute in attributes.Cast<MenuItem>())
+                    foreach (var attribute in attributes.Cast<MenuItem>())
                     {
                         if (attribute.menuItem.StartsWith(GameObjectMenuRoot))
                             items.Add(attribute);
@@ -62,51 +66,67 @@ internal static class GameObjectContextMenuManager
         SceneHierarchyHooks.addItemsToGameObjectContextMenu += OnGameObjectContextMenu;
     }
 
-    //[MenuItem(GameObjectMenuRoot + MenuPathRoot + "/" + "Check All", false, int.MaxValue)]
-    internal static void CheckAll() 
-    {
-        var config = GameObjectContextMenuManagerConfiguration.instance;
-        config.DisabledItems.Clear();
-        config.Save();
-    }
-
-    //[MenuItem(GameObjectMenuRoot + MenuPathRoot + "/" + "Unckeck All", false, int.MaxValue)]
-    internal static void UncheckAll()
-    {
-        if (MenuItemRoots == null)
-            return;
-
-        var config = GameObjectContextMenuManagerConfiguration.instance;
-        foreach(var x in MenuItemRoots)
-        {
-            config.DisabledItems.Add(x);
-        }
-        config.Save();
-    }
-
     private static void OnGameObjectContextMenu(GenericMenu menu, GameObject @object)
     {
-        if (MenuItemRoots == null)
-            return;
+        var configurations = GameObjectContextMenuManagerConfiguration.instance.MenuManageConfigurations;
+        if (configurations == null) return;
 
         var list = Unsafe.As<Tuple<List<MenuItemItem>>>(menu).Item1;
 
-        list.RemoveAll(x =>
+        var miiActualType = list.FirstOrDefault()?.GetType();
+        if (miiActualType is null) { return; }
+
+        MenuItemItem CloneMII(MenuItemItem menuItemItem)
         {
-            if (x.Content == null)
-                return false;
+            var newInstance = Unsafe.As<MenuItemItem>(Activator.CreateInstance(miiActualType, null, false, true, null));
 
-            var text = x.Content.text;
-            if (string.IsNullOrEmpty(text))
-                return false;
+            newInstance.Content = new(menuItemItem.Content);
+            newInstance.Separator = menuItemItem.Separator;
+            newInstance.On = menuItemItem.On;
+            newInstance.Func = menuItemItem.Func;
+            newInstance.Func2 = menuItemItem.Func2;
+            newInstance.UserData = menuItemItem.UserData;
 
-            if (text.IndexOf('/') is int index and not -1)
+            return newInstance;
+        }
+
+        OriginalMenuItemItems ??= Unsafe.As<List<MenuItemItem>>(new List<object>(list));
+        var editableOrigins = Unsafe.As<List<MenuItemItem>>(new List<object>(OriginalMenuItemItems.Select(CloneMII)));
+        list.Clear();
+
+        var listCash = Unsafe.As<List<MenuItemItem>>(new List<object>());
+
+        foreach (var config in configurations)
+        {
+            if (config.ThisIsSeparator)
             {
-                text = text[..index];
+                menu.AddSeparator(config.Path);
+                continue;
             }
+            var basePath = config.Path;
+            var includeStatPath = config.IncludeStatPath;
 
-            return GameObjectContextMenuManagerConfiguration.instance.DisabledItems.Contains(text);
-        });
+            bool ConfigTarget(MenuItemItem mii)
+            {
+                var path = mii?.Content?.text;
+                if (path is null) { return false; }
+                return path.StartsWith(includeStatPath);
+            }
+            var relocationTarget = listCash;
+            relocationTarget.Clear();
+            relocationTarget.AddRange(editableOrigins.Where(ConfigTarget));
+            foreach (var r in relocationTarget) editableOrigins.Remove(r);
+
+            for (var i = 0; relocationTarget.Count > i; i += 1)
+            {
+                var menuItemItem = relocationTarget[i];
+                var path = menuItemItem?.Content?.text;
+                if (path == null) { continue; }
+                var relocatedPath = basePath + path.Remove(0, includeStatPath.Length);
+                menuItemItem!.Content!.text = relocatedPath;
+            }
+            list.AddRange(relocationTarget);
+        }
 
         menu.AddSeparator("");
 
@@ -120,36 +140,7 @@ internal static class GameObjectContextMenuManager
             menu.AddItem(new(path), false, callback);
         }
 
-        AddMenu($"{MenuPathRoot}/Check All", CheckAll, GameObjectContextMenuManagerConfiguration.instance.DisabledItems.Count != 0);
-        AddMenu($"{MenuPathRoot}/Uncheck All", UncheckAll, GameObjectContextMenuManagerConfiguration.instance.DisabledItems.Count != MenuItemRoots.Count);
-        menu.AddSeparator(MenuPathRoot + "/");
-
-        AddMenu($"{MenuPathRoot}/Edit on GUI..", () => EditorWindow.GetWindow<GUI>(), true);
-
-        menu.AddSeparator(MenuPathRoot + "/");
-        StringBuilder sb = new();
-        foreach(var name in MenuItemRoots)
-        {
-            sb.Clear();
-            sb.Append(MenuPathRoot);
-            sb.Append("/");
-            sb.Append(name);
-            var path = sb.ToString();
-
-            menu.AddItem(new(path), !GameObjectContextMenuManagerConfiguration.instance.DisabledItems.Contains(name), static context => 
-            {
-                var name = (context as string)!;
-                var items = GameObjectContextMenuManagerConfiguration.instance.DisabledItems;
-                if (items.Contains(name))
-                    items.Remove(name);
-                else
-                    items.Add(name);
-
-                GameObjectContextMenuManagerConfiguration.instance.Save();
-            }, name);
-        }
-
-        //list.RemoveAll(x => x.Content?.text.EndsWith(TemporaryMenuItemName) ?? false);
+        AddMenu($"{MenuPathRoot} Edit on GUI..", () => EditorWindow.GetWindow<GUI>(), true);
     }
 
     internal sealed class MenuItemItem
@@ -169,27 +160,63 @@ internal static class GameObjectContextMenuManager
 
         public void OnGUI()
         {
-            if (MenuItemRoots is null)
-                return;
+            using var ss = new EditorGUILayout.ScrollViewScope(scrollPosition);
+            var mmConfiguration = GameObjectContextMenuManagerConfiguration.instance;
+            var sObj = new SerializedObject(mmConfiguration);
 
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            var config = GameObjectContextMenuManagerConfiguration.instance;
-            foreach(var x in MenuItemRoots)
+            var configurations = sObj.FindProperty(nameof(GameObjectContextMenuManagerConfiguration.MenuManageConfigurations));
+            EditorGUILayout.PropertyField(configurations);
+
+
+            if (GUILayout.Button("Add Separator"))
             {
-                EditorGUI.BeginChangeCheck();
-                var flag = EditorGUILayout.ToggleLeft(x, !config.DisabledItems.Contains(x));
-                if (EditorGUI.EndChangeCheck())
-                {
-                    if (flag)
-                        config.DisabledItems.Remove(x);
-                    else
-                        config.DisabledItems.Add(x);
-
-                    config.Save();
-                }
+                configurations.InsertArrayElementAtIndex(0);
+                var element = configurations.GetArrayElementAtIndex(0);
+                element.FindPropertyRelative(nameof(MenuManageConfiguration.Path)).stringValue = "";
+                element.FindPropertyRelative(nameof(MenuManageConfiguration.IncludeStatPath)).stringValue = "";
+                element.FindPropertyRelative(nameof(MenuManageConfiguration.ThisIsSeparator)).boolValue = true;
             }
 
-            EditorGUILayout.EndScrollView();
+
+            var menuItemRoots = GameObjectContextMenuManager.MenuItemRoots;
+            if (menuItemRoots is not null)
+            {
+                foreach (var miPath in menuItemRoots)
+                {
+                    using var s = new GUILayout.HorizontalScope();
+                    if (GUILayout.Button("Add", GUILayout.MaxWidth(64f)))
+                    {
+                        configurations.InsertArrayElementAtIndex(0);
+                        var element = configurations.GetArrayElementAtIndex(0);
+                        element.FindPropertyRelative(nameof(MenuManageConfiguration.Path)).stringValue = miPath;
+                        element.FindPropertyRelative(nameof(MenuManageConfiguration.IncludeStatPath)).stringValue = miPath;
+                        element.FindPropertyRelative(nameof(MenuManageConfiguration.ThisIsSeparator)).boolValue = false;
+                    }
+                    GUILayout.TextField(miPath);
+                }
+            }
+            sObj.ApplyModifiedProperties();
+
+            using (new GUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Save to .json"))
+                {
+                    var writePath = EditorUtility.SaveFilePanel("save GameObjectContextMenuManagerConfiguration", "Assets", "GameObjectContextMenuManagerConfiguration.json", "json");
+                    if (string.IsNullOrWhiteSpace(writePath) is false)
+                    {
+                        File.WriteAllText(writePath, JsonUtility.ToJson(mmConfiguration, true));
+                    }
+                }
+                if (GUILayout.Button("Load from .json"))
+                {
+                    var writePath = EditorUtility.OpenFilePanel("load GameObjectContextMenuManagerConfiguration", "Assets", "json");
+                    if (string.IsNullOrWhiteSpace(writePath) is false)
+                    {
+                        JsonUtility.FromJsonOverwrite(File.ReadAllText(writePath), mmConfiguration);
+                    }
+                }
+            }
+            scrollPosition = ss.scrollPosition;
         }
     }
 }
