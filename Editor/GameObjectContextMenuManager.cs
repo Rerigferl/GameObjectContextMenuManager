@@ -67,7 +67,7 @@ internal static class GameObjectContextMenuManager
             return newInstance;
         }
 
-        if (MenuItemRoots is null) { CorrectMenuItemRoots(list); }
+        CorrectMenuItemRoots(list);
         var originals = Unsafe.As<List<MenuItemItem>>(new List<object>(list));
         list.Clear();
 
@@ -177,6 +177,7 @@ internal static class GameObjectContextMenuManager
             var menuItemRoots = GameObjectContextMenuManager.MenuItemRoots;
             if (menuItemRoots is not null)
             {
+                EditorGUILayout.LabelField("目的の項目が存在しない場合は、それが表示されるような状況でメニューを表示すると見つかる場合があります。");
                 foreach (var miPath in menuItemRoots)
                 {
                     if (ConfiguredMenuPath.Contains(miPath)) { continue; }
