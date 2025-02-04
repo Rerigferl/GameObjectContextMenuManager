@@ -167,6 +167,12 @@ internal static class GameObjectContextMenuManager
             //     element.FindPropertyRelative(nameof(MenuManageConfiguration.IncludeStatPath)).stringValue = "";
             //     element.FindPropertyRelative(nameof(MenuManageConfiguration.ThisIsSeparator)).boolValue = true;
             // }
+            if (ConfiguredMenuPath is null)
+            {
+                ConfiguredMenuPath ??= new();
+                SetConfiguredMenuPathHashSet(configurations, ConfiguredMenuPath);
+                mmConfiguration.Save();
+            }
 
             var menuItemRoots = GameObjectContextMenuManager.MenuItemRoots;
             if (menuItemRoots is not null)
