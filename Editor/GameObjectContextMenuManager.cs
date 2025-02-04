@@ -15,6 +15,11 @@ internal static class GameObjectContextMenuManager
 {
     static GameObjectContextMenuManager()
     {
+        EditorApplication.delayCall += init;
+    }
+
+    private static void init()
+    {
         SceneHierarchyHooks.addItemsToGameObjectContextMenu -= OnGameObjectContextMenu;
         SceneHierarchyHooks.addItemsToGameObjectContextMenu += OnGameObjectContextMenu;
     }
