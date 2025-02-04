@@ -10,8 +10,10 @@ namespace Numeira
     [FilePath("ProjectSettings/GameObjectContextMenuManager.asset", FilePathAttribute.Location.ProjectFolder)]
     internal sealed class GameObjectContextMenuManagerConfiguration : ScriptableSingleton<GameObjectContextMenuManagerConfiguration>
     {
+        [SerializeField][Obsolete] private string[]? disabledItems;
         public MenuManageConfiguration[] MenuManageConfigurations = new MenuManageConfiguration[] { MenuManageConfiguration.From("Others", "") };
-        public void Save(){
+        public void Save()
+        {
             Save(true);
         }
     }
