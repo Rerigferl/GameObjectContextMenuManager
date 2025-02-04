@@ -1,0 +1,159 @@
+{
+    "MenuManageConfigurations": [
+        {
+            "Path": "Cut",
+            "IncludeStatPath": "Cut",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Copy",
+            "IncludeStatPath": "Copy",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Paste",
+            "IncludeStatPath": "Paste",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Paste As Child",
+            "IncludeStatPath": "Paste As Child",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Rename",
+            "IncludeStatPath": "Rename",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Duplicate",
+            "IncludeStatPath": "Duplicate",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Delete",
+            "IncludeStatPath": "Delete",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Select Children",
+            "IncludeStatPath": "Select Children",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Find References in Scene",
+            "IncludeStatPath": "Find References in Scene",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Set as Default Parent",
+            "IncludeStatPath": "Set as Default Parent",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Prefab",
+            "IncludeStatPath": "Prefab",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Create Empty",
+            "IncludeStatPath": "Create Empty",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Create Empty Parent",
+            "IncludeStatPath": "Create Empty Parent",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "NDM Framework",
+            "IncludeStatPath": "NDM Framework",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Modular Avatar",
+            "IncludeStatPath": "Modular Avatar",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Avatar Optimizer",
+            "IncludeStatPath": "Avatar Optimizer",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "TexTransTool",
+            "IncludeStatPath": "TexTransTool",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Light Limit Changer",
+            "IncludeStatPath": "Light Limit Changer",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "VRCQuestTools",
+            "IncludeStatPath": "VRCQuestTools",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "lilToon",
+            "IncludeStatPath": "lilToon",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Continuous Avatar Uploader",
+            "IncludeStatPath": "Continuous Avatar Uploader",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Others/",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": false
+        }
+    ]
+}

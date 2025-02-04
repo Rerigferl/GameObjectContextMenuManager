@@ -1,0 +1,89 @@
+{
+    "MenuManageConfigurations": [
+        {
+            "Path": "NDM Framework",
+            "IncludeStatPath": "NDM Framework",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Modular Avatar",
+            "IncludeStatPath": "Modular Avatar",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Avatar Optimizer",
+            "IncludeStatPath": "Avatar Optimizer",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "TexTransTool",
+            "IncludeStatPath": "TexTransTool",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Setup Light Limit Changer",
+            "IncludeStatPath": "Light Limit Changer/Setup",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "VRCQuestTools",
+            "IncludeStatPath": "VRCQuestTools",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Create/Empty",
+            "IncludeStatPath": "Create Empty",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Create/Empty",
+            "IncludeStatPath": "Create Empty Parent",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Create/Empty",
+            "IncludeStatPath": "Create Empty Child",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Create/3D Object",
+            "IncludeStatPath": "3D Object",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Added GameObject",
+            "IncludeStatPath": "Added GameObject",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "lilToon",
+            "IncludeStatPath": "lilToon",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Continuous Avatar Uploader",
+            "IncludeStatPath": "Continuous Avatar Uploader",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Others/",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": false
+        }
+    ]
+}
