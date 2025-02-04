@@ -11,6 +11,9 @@ namespace Numeira
     internal sealed class GameObjectContextMenuManagerConfiguration : ScriptableSingleton<GameObjectContextMenuManagerConfiguration>
     {
         public MenuManageConfiguration[] MenuManageConfigurations = new MenuManageConfiguration[] { MenuManageConfiguration.From("Others", "") };
+        public void Save(){
+            Save(true);
+        }
     }
 
     [Serializable]

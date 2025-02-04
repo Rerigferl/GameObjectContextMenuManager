@@ -216,6 +216,7 @@ internal static class GameObjectContextMenuManager
                     {
                         Undo.RecordObject(mmConfiguration, "Load from .json");
                         JsonUtility.FromJsonOverwrite(File.ReadAllText(writePath), mmConfiguration);
+                        mmConfiguration.Save();
                     }
                 }
             }
