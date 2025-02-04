@@ -21,15 +21,14 @@ internal static class GameObjectContextMenuManager
 
     internal static HashSet<string>? MenuItemRoots;
 
-    static List<MenuItemItem>? OriginalMenuItemItems;
 
     private const string GameObjectMenuRoot = "GameObject/";
     private const string MenuPathRoot = "Manage Items";
 
-    private static void CorrectMenuItemRoots()
+    private static void CorrectMenuItemRoots(List<MenuItemItem> originalMenuItemItems)
     {
         // AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).SelectMany(x => x.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)).Where(x => x.GetCustomAttribute<MenuItem>() != null);
-        MenuItemRoots = OriginalMenuItemItems.Select(i => i?.Content?.text)
+        MenuItemRoots = originalMenuItemItems.Select(i => i?.Content?.text)
         .Where(i => i is not null)
         .Cast<string>()
         .Select(path =>
@@ -68,9 +67,8 @@ internal static class GameObjectContextMenuManager
             return newInstance;
         }
 
-        OriginalMenuItemItems ??= Unsafe.As<List<MenuItemItem>>(new List<object>(list));
-        if (MenuItemRoots is null) { CorrectMenuItemRoots(); }
-        var editableOrigins = Unsafe.As<List<MenuItemItem>>(new List<object>(OriginalMenuItemItems.Select(CloneMII)));
+        if (MenuItemRoots is null) { CorrectMenuItemRoots(list); }
+        var originals = Unsafe.As<List<MenuItemItem>>(new List<object>(list));
         list.Clear();
 
         var listCash = Unsafe.As<List<MenuItemItem>>(new List<object>());
@@ -93,16 +91,17 @@ internal static class GameObjectContextMenuManager
             }
             var relocationTarget = listCash;
             relocationTarget.Clear();
-            relocationTarget.AddRange(editableOrigins.Where(ConfigTarget));
-            foreach (var r in relocationTarget) editableOrigins.Remove(r);
+            relocationTarget.AddRange(originals.Where(ConfigTarget));
+            foreach (var r in relocationTarget) originals.Remove(r);
 
             for (var i = 0; relocationTarget.Count > i; i += 1)
             {
-                var menuItemItem = relocationTarget[i];
+                var menuItemItem = CloneMII(relocationTarget[i]);
                 var path = menuItemItem?.Content?.text;
                 if (path == null) { continue; }
                 var relocatedPath = basePath + path.Remove(0, includeStatPath.Length);
                 menuItemItem!.Content!.text = relocatedPath;
+                relocationTarget[i] = menuItemItem;
             }
             list.AddRange(relocationTarget);
         }
@@ -160,12 +159,6 @@ internal static class GameObjectContextMenuManager
             var configurations = sObj.FindProperty(nameof(GameObjectContextMenuManagerConfiguration.MenuManageConfigurations));
             EditorGUILayout.PropertyField(configurations);
 
-            if (ConfiguredMenuPath is null || ccs.changed)
-            {
-                ConfiguredMenuPath ??= new();
-                SetConfiguredMenuPathHashSet(configurations, ConfiguredMenuPath);
-            }
-
             // if (GUILayout.Button("Add Separator"))
             // {
             //     configurations.InsertArrayElementAtIndex(0);
@@ -221,6 +214,13 @@ internal static class GameObjectContextMenuManager
                 }
             }
             scrollPosition = ss.scrollPosition;
+
+            if (ccs.changed)
+            {
+                ConfiguredMenuPath ??= new();
+                SetConfiguredMenuPathHashSet(configurations, ConfiguredMenuPath);
+                mmConfiguration.Save();
+            }
         }
     }
 }
