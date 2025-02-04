@@ -11,23 +11,8 @@
             "ThisIsSeparator": false
         },
         {
-            "Path": "Avatar Optimizer",
-            "IncludeStatPath": "Avatar Optimizer",
-            "ThisIsSeparator": false
-        },
-        {
             "Path": "TexTransTool",
             "IncludeStatPath": "TexTransTool",
-            "ThisIsSeparator": false
-        },
-        {
-            "Path": "Setup Light Limit Changer",
-            "IncludeStatPath": "Light Limit Changer/Setup",
-            "ThisIsSeparator": false
-        },
-        {
-            "Path": "VRCQuestTools",
-            "IncludeStatPath": "VRCQuestTools",
             "ThisIsSeparator": false
         },
         {
@@ -58,6 +43,26 @@
         {
             "Path": "Added GameObject",
             "IncludeStatPath": "Added GameObject",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "",
+            "IncludeStatPath": "",
+            "ThisIsSeparator": true
+        },
+        {
+            "Path": "Avatar Optimizer",
+            "IncludeStatPath": "Avatar Optimizer",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "Setup Light Limit Changer",
+            "IncludeStatPath": "Light Limit Changer/Setup",
+            "ThisIsSeparator": false
+        },
+        {
+            "Path": "VRCQuestTools",
+            "IncludeStatPath": "VRCQuestTools",
             "ThisIsSeparator": false
         },
         {
